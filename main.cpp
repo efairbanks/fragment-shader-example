@@ -28,7 +28,9 @@ char* loadFile(char* file_name){
   file_contents[input_file_size] = 0;
   return file_contents;
 }
+int uniform_resolution;
 void reshape(int width, int height){
+  if(uniform_resolution!=-1) glUniform2f(uniform_resolution,width,height);
   glViewport(0,0,width,height);
 }
 void display(void){
@@ -55,6 +57,8 @@ int main(int argc,char** argv){
   glCompileShader(fragmentHandle);
   glAttachShader(programId, fragmentHandle);
   glLinkProgram(programId);
+  glUseProgram(programId);
+  uniform_resolution=glGetUniformLocation(programId,"resolution");
   // --- //
   glutReshapeFunc(reshape);
   glutDisplayFunc(display);
