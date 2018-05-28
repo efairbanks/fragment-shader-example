@@ -55,7 +55,7 @@ int main(int argc,char** argv){
   printf("%s\n\n",f);
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-  int windowID=glutCreateWindow("single triangle");
+  int windowID=glutCreateWindow("#justfragmentshaderthings");
   glClearColor(0,0,0,1);
   // --- //
   programId = glCreateProgram();
