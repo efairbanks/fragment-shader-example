@@ -1,0 +1,14 @@
+// FRAGEMENT SHADER
+
+// specify version
+//#version 400
+
+// output color for this fragment (pixel)
+out vec4 FragColor;
+
+void main()
+{
+  // assign vertex color to pixel color
+    FragColor = vec4(fmod(gl_FragCoord.x/100.0,1.0), fmod(gl_FragCoord.y/200.0,1.0), 1.0, 1.0);
+}
+
