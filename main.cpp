@@ -39,7 +39,6 @@ void display(void){
   glClear(GL_COLOR_BUFFER_BIT);
   glUseProgram(programId);
   glRecti(-1,-1,1,1);
-  //glUseProgram(0);
   glutSwapBuffers();
 }
 void timer(int i){
@@ -48,13 +47,15 @@ void timer(int i){
   if(uniform_time!=-1) glUniform1f(uniform_time,time);
   glutTimerFunc(i,timer,i);
 }
+char ERROR_BUF[2048];
 int main(int argc,char** argv){
-  char* f=loadFile("simple.fragment");
+  char* f=loadFile("simple.frag");
   int flen=strlen(f);
   // --- //
   printf("%s\n\n",f);
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+  // --- //
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
   int windowID=glutCreateWindow("#justfragmentshaderthings");
   glClearColor(0,0,0,1);
   // --- //
@@ -64,6 +65,16 @@ int main(int argc,char** argv){
   if(!fragmentHandle) printf("glCreateShader Error\n");
   glShaderSource(fragmentHandle,1,&f,NULL);
   glCompileShader(fragmentHandle);
+  // --- //
+  GLint success = 0;
+  glGetShaderiv(fragmentHandle, GL_COMPILE_STATUS, &success);
+  printf("success: %d\n",success);
+  GLint logSize = 0;
+  glGetShaderiv(fragmentHandle, GL_INFO_LOG_LENGTH, &logSize);
+  memset(ERROR_BUF,0,2048*sizeof(char));
+  glGetShaderInfoLog(fragmentHandle, logSize, NULL, ERROR_BUF);
+  printf("ERROR: %s",ERROR_BUF);
+  // --- //
   glAttachShader(programId, fragmentHandle);
   glLinkProgram(programId);
   glUseProgram(programId);
@@ -73,6 +84,7 @@ int main(int argc,char** argv){
   glutReshapeFunc(reshape);
   glutDisplayFunc(display);
   timer(1000/60);
+  printf("OpenGL version supported by this platform (%s): \n", glGetString(GL_VERSION));
   glutMainLoop(); 
   return 0;
 }
