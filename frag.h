@@ -22,6 +22,8 @@ class Frag{
   public:
     static int _uniform_resolution;
     static int _uniform_time;
+    static int _width;
+    static int _height;
     static double _time;
     // --- //
     static char _ERROR_BUF[2048];
@@ -33,6 +35,8 @@ class Frag{
     static void (*_display)();
     static void (*_timer)(int);
     static void _default_reshape(int width, int height){
+      _width=width;
+      _height=height;
       if(_uniform_resolution!=-1) glUniform2f(_uniform_resolution,width,height);
       glViewport(0,0,width,height);
     }
@@ -43,10 +47,15 @@ class Frag{
       glutSwapBuffers();
     }
     static void _default_timer(int i){
-      glutPostRedisplay();
-      _time+=i*0.001;
+      float delta=i*0.001;
+      int secBefore=(int)(_time);
+      int secAfter=(int)(_time+delta);
+      if(secBefore!=secAfter) Load("simple.frag");
       if(_uniform_time!=-1) glUniform1f(_uniform_time,_time);
+      if(_uniform_resolution!=-1) glUniform2f(_uniform_resolution,_width,_height);
+      glutPostRedisplay();
       glutTimerFunc(i,_timer,i);
+      _time+=i*0.001;
     }
     static void Init(int argc,char** argv,void (*reshape)(int,int),void (*display)(),void (*timer)(int)){
       _reshape=reshape==NULL?_default_reshape:reshape;
@@ -56,15 +65,21 @@ class Frag{
       glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
       _window_id=glutCreateWindow("#justfragmentshaderthings");
       glClearColor(0,0,0,1);
-      _program_id = glCreateProgram();
       if(!_program_id) printf("glCreateProgram Error\n");
       _uniform_resolution=-1;
       _uniform_time=-1;
+      _fragment_id=0;
       glutReshapeFunc(_reshape);
       glutDisplayFunc(_display);
       _timer(1000/60);
     }
     static void Load(char* file_name){
+      if(_fragment_id!=0){
+        glDetachShader(_program_id,_fragment_id);
+        glDeleteShader(_fragment_id);
+        glDeleteProgram(_program_id);
+      }
+      _program_id = glCreateProgram();
       char *f;
       long input_file_size;
       FILE *input_file = fopen(file_name, "rb");
@@ -84,11 +99,13 @@ class Frag{
       GLint success = 0;
       glGetShaderiv(_fragment_id, GL_COMPILE_STATUS, &success);
       printf("success: %d\n",success);
-      GLint logSize = 0;
-      glGetShaderiv(_fragment_id, GL_INFO_LOG_LENGTH, &logSize);
-      memset(_ERROR_BUF,0,2048*sizeof(char));
-      glGetShaderInfoLog(_fragment_id,logSize,NULL,_ERROR_BUF);
-      printf("ERROR: %s",_ERROR_BUF);
+      if(!success) {
+        GLint logSize = 0;
+        glGetShaderiv(_fragment_id, GL_INFO_LOG_LENGTH, &logSize);
+        memset(_ERROR_BUF,0,2048*sizeof(char));
+        glGetShaderInfoLog(_fragment_id,logSize,NULL,_ERROR_BUF);
+        printf("ERROR: %s",_ERROR_BUF);
+      }
       // --- //
       glAttachShader(_program_id, _fragment_id);
       glLinkProgram(_program_id);
@@ -104,6 +121,8 @@ class Frag{
 };
 int Frag::_uniform_resolution;
 int Frag::_uniform_time;
+int Frag::_width;
+int Frag::_height;
 double Frag::_time;
 // --- //
 char Frag::_ERROR_BUF[2048];
